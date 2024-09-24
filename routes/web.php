@@ -69,6 +69,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Attendence 
         Route::get('/attendences', [AttendenceController::class, 'index'])->name('attendence');
+        Route::get('/attendence/summary', [AttendenceController::class, 'summary'])->name('attendence.summary');
+        Route::get('/attendence/summary/get', [AttendenceController::class, 'summary_get'])->name('attendence.summary.get');
     });
 });
 

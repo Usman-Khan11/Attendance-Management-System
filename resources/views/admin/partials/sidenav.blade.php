@@ -28,6 +28,13 @@
                     <div data-i18n="Leaves">Leaves</div>
                 </a>
             </li>
+
+            <li class="menu-item {{ menuActive('admin.attendence.summary') }}">
+                <a href="{{ route('admin.attendence.summary') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-file"></i>
+                    <div data-i18n="Summary">Summary</div>
+                </a>
+            </li>
         </ul>
     </div>
 </aside>
