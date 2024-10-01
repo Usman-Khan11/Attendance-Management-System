@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('user.layouts.app')
 
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -7,9 +7,6 @@
             <div class="row">
                 <div class="col-8 text-start">
                     <h4 class="fw-bold">{{ $page_title }}</h4>
-                </div>
-                <div class="col-4 text-end">
-                    <a href="{{ route('admin.leave.create') }}" class="btn btn-primary">Add New Leave</a>
                 </div>
             </div>
         </div>
@@ -37,7 +34,7 @@
             "pageLength": '{{ general()->page_length }}',
             "scrollX": true,
             "ajax": {
-                "url": "{{ route('admin.leave') }}",
+                "url": "{{ route('user.leaves') }}",
                 "type": "get",
                 "data": function(d) {},
             },
@@ -48,16 +45,6 @@
                 {
                     data: 'title',
                     title: 'title'
-                },
-                {
-                    title: 'Username',
-                    "render": function(data, type, full, meta) {
-                        if (full.user) {
-                            return full.user.name;
-                        } else {
-                            return '-';
-                        }
-                    }
                 },
                 {
                     data: 'days',
@@ -103,10 +90,9 @@
                 {
                     title: 'Actions',
                     "render": function(data, type, full, meta) {
-                        let edit = `<a href="/admin/leave/edit/${full.id}" class="btn btn-warning btn-sm">Edit</a> `;
-                        let del = `<a onclick="return checkDelete()" href="/admin/leave/delete/${full.id}" class="btn btn-danger btn-sm">Delete</a> `;
+                        let edit = `<a href="/user/leave/view/${full.id}" class="btn btn-info btn-sm">View</a> `;
 
-                        return edit + del;
+                        return edit;
                     }
                 }
             ]

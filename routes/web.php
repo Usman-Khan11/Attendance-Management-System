@@ -90,6 +90,9 @@ Route::name('user.')->prefix('user')->group(function () {
 
             Route::post('/mark-in', [UserController::class, 'mark_in'])->name('mark_in');
             Route::post('/mark-out', [UserController::class, 'mark_out'])->name('mark_out');
+
+            Route::get('/public-holidays', [UserController::class, 'public_holidays'])->name('public_holidays');
+            Route::get('/leaves', [UserController::class, 'leaves'])->name('leaves');
         });
     });
 });

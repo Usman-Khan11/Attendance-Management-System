@@ -128,4 +128,32 @@ class UserController extends Controller
 
         return ["error" => "Please Markin First to proceed."];
     }
+
+    public function public_holidays(Request $request)
+    {
+        $data['page_title'] = "Public Holidays";
+
+        if ($request->ajax()) {
+            $query = PublicHoilday::Query();
+            $query = $query->where('created_at', '>=', auth()->user()->created_at);
+            $query = $query->latest()->get();
+            return DataTables::of($query)->addIndexColumn()->make(true);
+        }
+
+        return view('user.public_holiday.index', $data);
+    }
+
+    public function leaves(Request $request)
+    {
+        $data['page_title'] = "Leaves";
+
+        if ($request->ajax()) {
+            $query = UserLeave::Query();
+            $query = $query->where('user_id', auth()->user()->id);
+            $query = $query->latest()->get();
+            return DataTables::of($query)->addIndexColumn()->make(true);
+        }
+
+        return view('user.leave.index', $data);
+    }
 }

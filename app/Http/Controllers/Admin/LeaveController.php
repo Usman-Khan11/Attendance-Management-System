@@ -95,6 +95,7 @@ class LeaveController extends Controller
         $leave->days = count($dates);
         $leave->dates = $dates;
         $leave->year = $request->year;
+        $leave->status = $request->status;
 
         if ($leave->save()) {
             return redirect()->route('admin.leave')->withSuccess('Leave updated successfully.');

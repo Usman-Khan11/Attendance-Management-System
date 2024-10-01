@@ -7,6 +7,20 @@
                     <div data-i18n="Dashboard">Dashboard</div>
                 </a>
             </li>
+
+            <li class="menu-item {{ menuActive('user.public_holidays') }}">
+                <a href="{{ route('user.public_holidays') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-ticket"></i>
+                    <div data-i18n="Public Holidays">Public Holidays</div>
+                </a>
+            </li>
+
+            <li class="menu-item {{ menuActive('user.leaves') }}">
+                <a href="{{ route('user.leaves') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-ticket"></i>
+                    <div data-i18n="My Leaves">My Leaves</div>
+                </a>
+            </li>
         </ul>
     </div>
 </aside>

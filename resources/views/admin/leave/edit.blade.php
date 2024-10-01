@@ -59,6 +59,14 @@ $dates = $leave->dates;
                     <input type="date" name="to" class="form-control" id="to" value="{{ old('to', end($dates)) }}">
                 </div>
 
+                <div class="form-group mb-3 col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" class="form-select select2" id="status">
+                        <option @if(old('status', $leave->status)=="1" ) selected @endif value="1">Active</option>
+                        <option @if(old('status', $leave->status)=="0" ) selected @endif value="0">In-active</option>
+                    </select>
+                </div>
+
                 <div class="col-12 mt-2">
                     <button type="submit" class="btn btn-primary w-100 d-block">Submit</button>
                 </div>

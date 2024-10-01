@@ -68,6 +68,9 @@
                         <h6 class="text-primary mb-0">REMARKS</h6>
                     </td>
                     <td>
+                        <h6 class="text-primary mb-0">IN/OUT STATUS</h6>
+                    </td>
+                    <td>
                         <h6 class="text-primary mb-0">STATUS</h6>
                     </td>
                 <tr>
@@ -80,7 +83,6 @@
                     <td>
                         @if(!empty($value->in_time))
                         {{ date('H:i a', strtotime($value->in_time)) }} &nbsp;
-                        @php echo attendanceStatus($value->in_status); @endphp
                         @else
                         -
                         @endif
@@ -88,13 +90,21 @@
                     <td>
                         @if(!empty($value->out_time))
                         {{ date('H:i a', strtotime($value->out_time)) }} &nbsp;
-                        @php echo attendanceStatus($value->out_status); @endphp
                         @else
                         -
                         @endif
                     </td>
                     <td>{{ number_format($value->hours, 2) }}</td>
                     <td>{{ $value->remarks }}</td>
+                    <td>
+                        @if(!empty($value->in_time) && !empty($value->out_time))
+                        @php echo attendanceStatus($value->in_status); @endphp
+                        /
+                        @php echo attendanceStatus($value->out_status); @endphp
+                        @else
+                        -
+                        @endif
+                    </td>
                     <td>
                         @if ($value->status == 0)
                         <span class="badge bg-danger">Absent</span>
