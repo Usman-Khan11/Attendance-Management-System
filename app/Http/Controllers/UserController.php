@@ -16,6 +16,56 @@ class UserController extends Controller
     public function home()
     {
         $data["page_title"] = "Dashboard";
+        $date = date("Y-m") . "-01 00:00:00";
+
+        $data['present_this_month'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('status', 1)
+            ->count();
+
+        $data['absent_this_month'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('status', 0)
+            ->count();
+
+        $data['hours'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->sum('hours');
+
+        $data['total_hours'] = auth()->user()->user_schedule->hours * Carbon::create(date("Y"), (int)date("m"))->daysInMonth;
+
+        $data['total_late_markins'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('in_status', 'Late In')
+            ->count();
+
+        $data['total_late_markouts'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('out_status', 'Late Out')
+            ->count();
+
+        $data['total_early_markins'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('in_status', 'Early In')
+            ->count();
+
+        $data['total_early_markouts'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('out_status', 'Early Out')
+            ->count();
+
+        $data['total_on_time_markins'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('in_status', 'In Time')
+            ->count();
+
+        $data['total_on_time_markouts'] = UserAttendence::where('user_id', auth()->user()->id)
+            ->where('created_at', '>=', $date)
+            ->where('out_status', 'On Time')
+            ->count();
+
+        $data['overall_attendance_progess'] = ($data['hours'] / $data['total_hours']) * 100;
+
         return view('user.dashboard', $data);
     }
 
