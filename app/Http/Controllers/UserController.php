@@ -13,58 +13,74 @@ use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
 {
-    public function home()
+    public function home(Request $request)
     {
         $data["page_title"] = "Dashboard";
-        $date = date("Y-m") . "-01 00:00:00";
 
-        $data['present_this_month'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('status', 1)
-            ->count();
+        if ($request->ajax()) {
+            $from = $request->from_date ? Carbon::parse($request->from_date)->startOfDay() : Carbon::now()->startOfMonth();
+            $to = $request->to_date ? Carbon::parse($request->to_date)->endOfDay() : Carbon::now()->endOfMonth();
+            $userId = auth()->user()->id;
 
-        $data['absent_this_month'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('status', 0)
-            ->count();
+            // Calculate total days in the selected range
+            $totalDays = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->count();
 
-        $data['hours'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->sum('hours');
+            // Get user's daily scheduled working hours
+            $scheduleHours = auth()->user()->user_schedule->hours ?? 0;
 
-        $data['total_hours'] = auth()->user()->user_schedule->hours * Carbon::create(date("Y"), (int)date("m"))->daysInMonth;
+            // Total hours based on selected date range
+            $res['total_hours'] = $scheduleHours * $totalDays;
 
-        $data['total_late_markins'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('in_status', 'Late In')
-            ->count();
+            $res['present_this_month'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('status', 1)
+                ->count();
 
-        $data['total_late_markouts'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('out_status', 'Late Out')
-            ->count();
+            $res['absent_this_month'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('status', 0)
+                ->count();
 
-        $data['total_early_markins'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('in_status', 'Early In')
-            ->count();
+            $res['hours'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->sum('hours');
 
-        $data['total_early_markouts'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('out_status', 'Early Out')
-            ->count();
+            $res['total_late_markins'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('in_status', 'Late In')
+                ->count();
 
-        $data['total_on_time_markins'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('in_status', 'In Time')
-            ->count();
+            $res['total_late_markouts'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('out_status', 'Late Out')
+                ->count();
 
-        $data['total_on_time_markouts'] = UserAttendence::where('user_id', auth()->user()->id)
-            ->where('created_at', '>=', $date)
-            ->where('out_status', 'On Time')
-            ->count();
+            $res['total_early_markins'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('in_status', 'Early In')
+                ->count();
 
-        $data['overall_attendance_progess'] = ($data['hours'] / $data['total_hours']) * 100;
+            $res['total_early_markouts'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('out_status', 'Early Out')
+                ->count();
+
+            $res['total_on_time_markins'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('in_status', 'In Time')
+                ->count();
+
+            $res['total_on_time_markouts'] = UserAttendence::where('user_id', $userId)
+                ->whereBetween('created_at', [$from, $to])
+                ->where('out_status', 'On Time')
+                ->count();
+
+            $res['overall_attendance_progess'] = ($res['hours'] / $res['total_hours']) * 100;
+
+            return $res;
+        }
 
         return view('user.dashboard', $data);
     }
@@ -73,10 +89,11 @@ class UserController extends Controller
     {
         $data["page_title"] = "My Attendance";
         $userId = auth()->user()->id;
-        $from = date("Y-m") . "-01 00:00:00";
-        $to = date("Y-m") . "-31 23:59:59";
 
         if ($request->ajax()) {
+            $from = $request->from_date . ' 00:00:00';
+            $to = $request->to_date . ' 23:59:59';
+
             $query = UserAttendence::Query();
             $query = $query->where('user_id', $userId);
             $query = $query->where('created_at', '>=', $from)->where('created_at', '<=', $to);
@@ -162,6 +179,7 @@ class UserController extends Controller
 
             $attendence->out_time = Carbon::now()->format('Y-m-d H:i:s');
             $attendence->hours = calculateTotalHour($attendence->in_time, $attendence->out_time);
+            $attendence->is_completed = 1;
 
             if ($time > $time_1) {
                 $attendence->out_status = "Late Out";

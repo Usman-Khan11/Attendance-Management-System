@@ -36,13 +36,12 @@ class CronController extends Controller
         $holiday = PublicHoilday::where('date', $this->date)->first();
         if ($holiday) {
             foreach ($this->users as $key => $user) {
-                $check = UserAttendence::where('user_id', $user->id)->where('created_at', '>=', $this->date . ' 00:00:00')->where('created_at', '<=', $this->date . ' 23:59:59')->count();
+                $check = UserAttendence::where('user_id', $user->id)
+                    ->whereBetween('created_at', [$this->date . ' 00:00:00', $this->date . ' 23:59:59'])
+                    ->count();
+
                 if ($check == 0) {
-                    $attendence = new UserAttendence();
-                    $attendence->user_id = $user->id;
-                    $attendence->remarks = @$holiday->name;
-                    $attendence->status = 2;
-                    $attendence->save();
+                    $this->markUserAttendence($user->id, @$holiday->name, 2, 1);
                 }
             }
         }
@@ -52,26 +51,32 @@ class CronController extends Controller
     {
         foreach ($this->users as $key => $user) {
             $restDay = $user->user_schedule->restday;
-            $check = UserAttendence::where('user_id', $user->id)->where('created_at', '>=', $this->date . ' 00:00:00')->where('created_at', '<=', $this->date . ' 23:59:59')->count();
+            $check = UserAttendence::where('user_id', $user->id)
+                ->whereBetween('created_at', [$this->date . ' 00:00:00', $this->date . ' 23:59:59'])
+                ->count();
+
             if ($check == 0 && in_array(date("l"), $restDay)) {
-                $attendence = new UserAttendence();
-                $attendence->user_id = $user->id;
-                $attendence->remarks = date("l");
-                $attendence->status = 4;
-                $attendence->save();
+                $this->markUserAttendence($user->id, date("l"), 4, 1);
             }
         }
     }
 
     public function markMarkoutMissing()
     {
-        foreach ($this->users as $key => $user) {
-            $time_1 = strtotime(date("H:i"));
-            $time_2 = strtotime(date("H:i", strtotime($user->user_schedule->out_time . " +6 hours")));
-            $check = UserAttendence::where('user_id', $user->id)->latest()->first();
-            if ($check && $check->in_time && empty($check->out_time) && $check->status = 1) {
-                $attendence =  UserAttendence::find($check->id);
+        $attendences = UserAttendence::with('user', 'user.user_schedule')
+            ->where('is_completed', 0)
+            ->take(10)
+            ->get();
+
+        foreach ($attendences as $key => $value) {
+            $created_at_date = date("Y-m-d", strtotime($value->created_at));
+            $time_1 = strtotime($value->created_at);
+            $time_2 = strtotime("$created_at_date {$value->user->user_schedule->out_time} +4 hours");
+
+            if ($value->in_time && empty($value->out_time) && $value->status == 1 && $time_1 > $time_2) {
+                $attendence =  $value;
                 $attendence->status = 5;
+                $attendence->is_completed = 1;
                 $attendence->save();
             }
         }
@@ -81,13 +86,12 @@ class CronController extends Controller
     {
         $leaves = UserLeave::where('dates', 'like', "%$this->date%")->where('status', 1)->get();
         foreach ($leaves as $key => $leave) {
-            $check = UserAttendence::where('user_id', $leave->user_id)->where('created_at', '>=', $this->date . ' 00:00:00')->where('created_at', '<=', $this->date . ' 23:59:59')->count();
+            $check = UserAttendence::where('user_id', $leave->user_id)
+                ->whereBetween('created_at', [$this->date . ' 00:00:00', $this->date . ' 23:59:59'])
+                ->count();
+
             if ($check == 0) {
-                $attendence = new UserAttendence();
-                $attendence->user_id = $leave->user_id;
-                $attendence->remarks = $leave->title;
-                $attendence->status = 3;
-                $attendence->save();
+                $this->markUserAttendence($leave->user_id, $leave->title, 3, 1);
 
                 if ($this->date == $leave->inactive_date) {
                     $leave->status = 0;
@@ -95,5 +99,15 @@ class CronController extends Controller
                 }
             }
         }
+    }
+
+    private function markUserAttendence($user_id, $remarks, $status, $is_completed = 0)
+    {
+        $attendence = new UserAttendence();
+        $attendence->user_id = $user_id;
+        $attendence->remarks = $remarks ? $remarks : null;
+        $attendence->status = $status;
+        $attendence->is_completed = $is_completed;
+        $attendence->save();
     }
 }

@@ -14,7 +14,8 @@
                                 <div class="form-group row g-1">
                                     <label class="col-md-3 col-3 col-form-label">From:</label>
                                     <div class="col-md-9 col-9">
-                                        <input type="date" class="form-control" name="from">
+                                        <input type="date" class="form-control" name="from" id="from_date"
+                                            value="{{ date('Y-m-01') }}">
                                     </div>
                                 </div>
                             </div>
@@ -22,12 +23,14 @@
                                 <div class="form-group row g-1">
                                     <label class="col-md-2 col-2 col-form-label">To:</label>
                                     <div class="col-md-10 col-10">
-                                        <input type="date" class="form-control" name="to">
+                                        <input type="date" class="form-control" name="to" id="to_date"
+                                            value="{{ date('Y-m-t') }}">
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-2 col-12 mt-2 mt-md-0">
-                                <button type="button" class="btn btn-success d-block w-100" id="filter">
+                                <button type="button" onclick="filter()" class="btn btn-success d-block w-100"
+                                    id="filter">
                                     Filter
                                 </button>
                             </div>
@@ -41,7 +44,7 @@
                                         <i class="ti ti-check ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($present_this_month) }}</h5>
+                                        <h5 class="mb-0 present_this_month">0</h5>
                                         <small>Presents</small>
                                     </div>
                                 </div>
@@ -52,7 +55,7 @@
                                         <i class="ti ti-ban ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($absent_this_month) }}</h5>
+                                        <h5 class="mb-0 absent_this_month">0</h5>
                                         <small>Absents</small>
                                     </div>
                                 </div>
@@ -63,7 +66,7 @@
                                         <i class="ti ti-clock ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($hours, 2) }}</h5>
+                                        <h5 class="mb-0 hours">0.00</h5>
                                         <small>Hours</small>
                                     </div>
                                 </div>
@@ -74,7 +77,7 @@
                                         <i class="ti ti-clock ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($total_hours, 2) }}</h5>
+                                        <h5 class="mb-0 total_hours">0.00</h5>
                                         <small>Total Hours</small>
                                     </div>
                                 </div>
@@ -85,7 +88,7 @@
                                         <i class="ti ti-bell ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($total_late_markins) }}</h5>
+                                        <h5 class="mb-0 total_late_markins">0</h5>
                                         <small>Late Markin</small>
                                     </div>
                                 </div>
@@ -96,7 +99,7 @@
                                         <i class="ti ti-arrow-right ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($total_late_markouts) }}</h5>
+                                        <h5 class="mb-0 total_late_markouts">0</h5>
                                         <small>Late Markout</small>
                                     </div>
                                 </div>
@@ -107,7 +110,7 @@
                                         <i class="fa fa-angle-double-left ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($total_early_markins) }}</h5>
+                                        <h5 class="mb-0 total_early_markins">0</h5>
                                         <small>Early Markin</small>
                                     </div>
                                 </div>
@@ -118,7 +121,7 @@
                                         <i class="fa fa-angle-double-right ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($total_early_markouts) }}</h5>
+                                        <h5 class="mb-0 total_early_markouts">0</h5>
                                         <small>Early Markout</small>
                                     </div>
                                 </div>
@@ -129,7 +132,7 @@
                                         <i class="ti ti-check ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($total_on_time_markins) }}</h5>
+                                        <h5 class="mb-0 total_on_time_markins">0</h5>
                                         <small>OnTime Markin</small>
                                     </div>
                                 </div>
@@ -140,7 +143,7 @@
                                         <i class="ti ti-check ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ number_format($total_on_time_markouts) }}</h5>
+                                        <h5 class="mb-0 total_on_time_markouts">0</h5>
                                         <small>OnTime Markout</small>
                                     </div>
                                 </div>
@@ -151,7 +154,7 @@
                                         <i class="ti ti-dashboard ti-sm"></i>
                                     </div>
                                     <div class="card-info">
-                                        <h5 class="mb-0">{{ round($overall_attendance_progess, 2) }}%</h5>
+                                        <h5 class="mb-0 overall_attendance_progess">0%</h5>
                                         <small>Overall Progress</small>
                                     </div>
                                 </div>
@@ -195,6 +198,8 @@
     <script>
         let datatable;
         $(document).ready(function() {
+            filter();
+
             datatable = $('#attendence_table').DataTable({
                 select: {
                     style: 'api'
@@ -209,7 +214,10 @@
                 "ajax": {
                     "url": "{{ route('user.my_attendance') }}",
                     "type": "get",
-                    "data": function(d) {},
+                    "data": function(d) {
+                        d.from_date = $("#from_date").val();
+                        d.to_date = $("#to_date").val();
+                    },
                 },
                 columns: [{
                         data: "DT_RowIndex",
@@ -325,7 +333,7 @@
                         position: "topRight"
                     });
 
-                    datatable.ajax.reload();
+                    filter();
                 } else if (res.error) {
                     iziToast.error({
                         message: res.error,
@@ -351,7 +359,7 @@
                         position: "topRight"
                     });
 
-                    datatable.ajax.reload();
+                    filter();
                 } else if (res.error) {
                     iziToast.error({
                         message: res.error,
@@ -361,6 +369,32 @@
 
                 $(e).attr("disabled", false);
                 $(e).html(`Mark Out`);
+            })
+        }
+
+        function filter() {
+            let from_date = $("#from_date").val();
+            let to_date = $("#to_date").val();
+
+            $.get("{{ route('user.home') }}", {
+                from_date,
+                to_date
+            }, function(res) {
+                if (res) {
+                    $(".present_this_month").text(numberFormat(res.present_this_month, 0));
+                    $(".absent_this_month").text(numberFormat(res.absent_this_month, 0));
+                    $(".hours").text(numberFormat(res.hours, 2));
+                    $(".total_hours").text(numberFormat(res.total_hours, 2));
+                    $(".total_late_markins").text(numberFormat(res.total_late_markins, 0));
+                    $(".total_late_markouts").text(numberFormat(res.total_late_markouts, 0));
+                    $(".total_early_markins").text(numberFormat(res.total_early_markins, 0));
+                    $(".total_early_markouts").text(numberFormat(res.total_early_markouts, 0));
+                    $(".total_on_time_markins").text(numberFormat(res.total_on_time_markins, 0));
+                    $(".total_on_time_markouts").text(numberFormat(res.total_on_time_markouts, 0));
+                    $(".overall_attendance_progess").text(numberFormat(res.overall_attendance_progess, 0) +
+                        "%");
+                    datatable.ajax.reload();
+                }
             })
         }
     </script>
