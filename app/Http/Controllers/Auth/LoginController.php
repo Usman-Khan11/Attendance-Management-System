@@ -39,7 +39,7 @@ class LoginController extends Controller
     {
         $validation_rule = [
             $this->username() => 'required|string',
-            'password' => 'required|string'
+            'password'        => 'required|string'
         ];
 
         $request->validate($validation_rule);
@@ -48,8 +48,9 @@ class LoginController extends Controller
     public function authenticated($request)
     {
         $credentials = $request->only($this->username(), 'password');
+        $remember = $request->has('remember');
 
-        if (Auth::guard('web')->attempt($credentials)) {
+        if (Auth::guard('web')->attempt($credentials, $remember)) {
             $user = auth()->user();
 
             if ($user->status == 0) {
@@ -57,30 +58,20 @@ class LoginController extends Controller
                 return back()->withError('Your account has been deactivated.');
             }
 
-            $ip = $_SERVER["REMOTE_ADDR"];
-            $exist = UserLogin::where('user_ip', $ip)->first();
-            $userLogin = new UserLogin();
-            if ($exist) {
-                $userLogin->longitude =  $exist->longitude;
-                $userLogin->latitude =  $exist->latitude;
-                $userLogin->location =  $exist->location;
-                $userLogin->country_code = $exist->country_code;
-                $userLogin->country =  $exist->country;
-            } else {
-                $info = json_decode(json_encode(getIpInfo()), true);
-                $userLogin->longitude =  @implode(',', $info['long']);
-                $userLogin->latitude =  @implode(',', $info['lat']);
-                $userLogin->location =  @implode(',', $info['city']) . (" - " . @implode(',', $info['area']) . "- ") . @implode(',', $info['country']) . (" - " . @implode(',', $info['code']) . " ");
-                $userLogin->country_code = @implode(',', $info['code']);
-                $userLogin->country =  @implode(',', $info['country']);
+            $ipInfo = getIpInfo();
+            if ($ipInfo['ip'] && env('APP_ENV') == 'production') {
+                UserLogin::create([
+                    'user_id'      => $user->id,
+                    'user_ip'      => $ipInfo['ip'],
+                    'location'     => $ipInfo['location'],
+                    'browser'      => $ipInfo['browser'],
+                    'os'           => $ipInfo['os'],
+                    'longitude'    => $ipInfo['longitude'],
+                    'latitude'     => $ipInfo['latitude'],
+                    'country'      => $ipInfo['country'],
+                    'country_code' => $ipInfo['country_code']
+                ]);
             }
-
-            $userAgent = osBrowser();
-            $userLogin->user_id = $user->id;
-            $userLogin->user_ip =  $ip;
-            $userLogin->browser = @$userAgent['browser'];
-            $userLogin->os = @$userAgent['os_platform'];
-            $userLogin->save();
 
             return redirect()->route('user.home');
         }

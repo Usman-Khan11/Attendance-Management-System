@@ -35,6 +35,13 @@
                     <div data-i18n="Summary">Summary</div>
                 </a>
             </li>
+
+            <li class="menu-item {{ menuActive('admin.board*') }}">
+                <a href="{{ route('admin.board') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-layout-kanban"></i>
+                    <div data-i18n="Board">Board</div>
+                </a>
+            </li>
         </ul>
     </div>
 </aside>

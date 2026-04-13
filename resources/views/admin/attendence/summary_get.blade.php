@@ -1,14 +1,14 @@
 <div class="row">
     <div class="col-12 text_div">
-        <h5 class="text-center mb-0 mt-3 pt-1"><b
-                style="text-transform: uppercase; color:#e67d27;">{{ $user->name }}</b> Monthly Statement From
-            <b style="color:#e67d27;">{{ date('M d, Y', strtotime($from)) }}</b> To <b
-                style="color:#e67d27;">{{ date('M d, Y', strtotime($to)) }}</b>
-        </h5>
+        <h4 class="text-center mb-0 mt-3 pt-1">
+            <b style="text-transform: uppercase; color:#e67d27;">{{ $user->name }}</b>
+            Monthly Statement From
+            <b style="color:#e67d27;">{{ showDate($from) }}</b> To <b style="color:#e67d27;">{{ showDate($to) }}</b>
+        </h4>
     </div>
 
     <div class="col-12">
-        <table class="table table-bordered mt-3 text-center">
+        <table class="table table-bordered mt-3 text-center border-dark">
             <tbody>
                 <tr>
                     <td>
@@ -35,23 +35,27 @@
                     <td>
                         <h6 class="text-primary mb-0">LEAVE DAYS</h6>
                     </td>
+                    <td>
+                        <h6 class="text-primary mb-0">POINTS</h6>
+                    </td>
                 </tr>
                 <tr>
-                    <td><b>{{ number_format($total_hours, 2) }} Hrs</b></td>
-                    <td><b>{{ number_format($working_hours, 2) }} Hrs</b></td>
-                    <td><b>{{ number_format($present_days) }}</b></td>
-                    <td><b>{{ number_format($absent_days) }}</b></td>
-                    <td><b>{{ number_format($late_in) }}</b></td>
-                    <td><b>{{ number_format($rest_days) }}</b></td>
-                    <td><b>{{ number_format($public_holidays) }}</b></td>
-                    <td><b>{{ number_format($leave_days) }}</b></td>
+                    <td><b>{{ formatNumber($total_hours) }} Hrs</b></td>
+                    <td><b>{{ formatNumber($working_hours) }} Hrs</b></td>
+                    <td><b>{{ formatNumber($present_days) }}</b></td>
+                    <td><b>{{ formatNumber($absent_days) }}</b></td>
+                    <td><b>{{ formatNumber($late_in) }}</b></td>
+                    <td><b>{{ formatNumber($rest_days) }}</b></td>
+                    <td><b>{{ formatNumber($public_holidays) }}</b></td>
+                    <td><b>{{ formatNumber($leave_days) }}</b></td>
+                    <td><b>{{ formatNumber($points > 0 ? -$points : $points) }}</b></td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <div class="col-12">
-        <table class="table table-bordered mt-3 text-center">
+        <table class="table table-bordered mt-3 text-center border-dark text-dark">
             <div class="col-12">
                 <tr>
                     <td>
@@ -73,6 +77,9 @@
                         <h6 class="text-primary mb-0">IN/OUT STATUS</h6>
                     </td>
                     <td>
+                        <h6 class="text-primary mb-0">POINT</h6>
+                    </td>
+                    <td>
                         <h6 class="text-primary mb-0">STATUS</h6>
                     </td>
                 <tr>
@@ -81,32 +88,25 @@
                 <div class="col-12">
                     @foreach ($query as $value)
                         <tr>
-                            <td>{{ date('M d, Y', strtotime($value->created_at)) }}</td>
-                            <td>
-                                @if (!empty($value->in_time))
-                                    {{ date('h:i a', strtotime($value->in_time)) }} &nbsp;
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td>
-                                @if (!empty($value->out_time))
-                                    {{ date('h:i a', strtotime($value->out_time)) }} &nbsp;
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td>{{ number_format($value->hours, 2) }}</td>
+                            <td>{{ showDate($value->created_at) }}</td>
+                            <td>{{ showTime($value->in_time) }}</td>
+                            <td>{{ showTime($value->out_time) }}</td>
+                            <td>{{ formatNumber($value->hours, 2) }} hrs</td>
                             <td>{{ $value->remarks }}</td>
                             <td>
-                                @if (!empty($value->in_time) && !empty($value->out_time))
-                                    @php echo attendanceStatus($value->in_status); @endphp
-                                    /
-                                    @php echo attendanceStatus($value->out_status); @endphp
+                                @if (!empty($value->in_status))
+                                    {!! attendanceStatus($value->in_status) !!}
+                                @else
+                                    -
+                                @endif
+                                /
+                                @if (!empty($value->out_status))
+                                    {!! attendanceStatus($value->out_status) !!}
                                 @else
                                     -
                                 @endif
                             </td>
+                            <td>{{ $value->points }}</td>
                             <td>
                                 @if ($value->status == 0)
                                     <span class="badge bg-danger">Absent</span>

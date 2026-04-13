@@ -9,7 +9,6 @@ use App\Models\UserLogin;
 use App\Models\UserSchedule;
 use Illuminate\Http\Request;
 use App\Models\UserAttendence;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -20,10 +19,39 @@ class ManageUserController extends Controller
         $data['page_title'] = "All Users";
 
         if ($request->ajax()) {
-            $query = User::Query();
-            $query = $query->with('user_schedule');
-            $query = $query->orderBy('name')->get();
-            return DataTables::of($query)->addIndexColumn()->make(true);
+            $query = User::with('user_schedule')
+                ->orderBy('name');
+
+            return DataTables::of($query)
+                ->addColumn('in_time', function ($row) {
+                    return showTime($row->user_schedule->in_time ?? '');
+                })
+                ->addColumn('out_time', function ($row) {
+                    return showTime($row->user_schedule->out_time ?? '');
+                })
+                ->addColumn('hours', function ($row) {
+                    return round($row->user_schedule->hours ?? 0, 2) . ' hrs';
+                })
+                ->addColumn('join_date', function ($row) {
+                    return showDate($row->user_schedule->join_date ?? '');
+                })
+                ->addColumn('status_badge', function ($row) {
+                    if ($row->status == 1) {
+                        return '<span class="badge bg-success">Active</span>';
+                    } else {
+                        return '<span class="badge bg-danger">In-Active</span>';
+                    }
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '';
+                    $btn .= '<a href="' . route('admin.user.edit', $row->id) . '" class="btn btn-sm btn-warning">Edit</a>';
+                    $btn .= '<a href="' . route('admin.user.delete', $row->id) . '" class="btn btn-sm btn-danger" onclick="return checkDelete()">Delete</a>';
+
+                    return "<div class='btn-group' role='group'>$btn</div>";
+                })
+                ->rawColumns(['in_time', 'out_time', 'status_badge', 'action'])
+                ->addIndexColumn()
+                ->make(true);
         }
 
         return view('admin.users.index', $data);
@@ -76,25 +104,34 @@ class ManageUserController extends Controller
         return back()->withSuccess('User deleted successfully.');
     }
 
-    public function store(Request $request)
+    private function user_validate($request)
     {
-        $validated = $request->validate([
+        $rule = [
             // User
-            'name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'required|email|max:100|unique:users',
-            'address' => 'nullable|string',
-            'username' => 'required|string|max:100|unique:users',
-            'password' => 'required|string|min:6',
+            'name'     => 'required|string|max:150',
+            'phone'    => 'nullable|string|max:20',
+            'email'    => 'required|email|unique:users,email,' . $request->id,
+            'address'  => 'nullable|string|max:500',
+            'username' => 'required|string|min:3|max:30|unique:users,username,' . $request->id,
 
             // User Schedule 
-            'in_time' => 'required|max:20',
-            'out_time' => 'required|max:20',
-            'join_date' => 'nullable|date|before_or_equal:today',
+            'in_time'     => 'required|date_format:H:i',
+            'out_time'    => 'required|date_format:H:i',
+            'join_date'   => 'nullable|date|before_or_equal:today',
             'resign_date' => 'nullable|date|after_or_equal:join_date',
-            // 'hours' => 'required|numeric|min:0|max:99999999999999.9999',
-            'restday' => 'nullable|array'
-        ]);
+            'restday'     => 'nullable|array'
+        ];
+
+        if (isset($request->password)) {
+            $rule['password'] = 'required|string|min:3|max:20';
+        }
+
+        $request->validate($rule);
+    }
+
+    public function store(Request $request)
+    {
+        $this->user_validate($request);
 
         $user = new User();
         $user->name = $request->name;
@@ -133,23 +170,7 @@ class ManageUserController extends Controller
 
     public function update(Request $request)
     {
-        $validated = $request->validate([
-            // User
-            'name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'email' => ['required', 'email', 'max:100', Rule::unique('users')->ignore($request->id)],
-            'address' => 'nullable|string',
-            'username' => ['required', 'string', 'max:100', Rule::unique('users')->ignore($request->id)],
-            'password' => 'nullable|string|min:6',
-
-            // User Schedule 
-            'in_time' => 'required|max:20',
-            'out_time' => 'required|max:20',
-            'join_date' => 'nullable|date|before_or_equal:today',
-            'resign_date' => 'nullable|date|after_or_equal:join_date',
-            // 'hours' => 'required|numeric|min:0|max:99999999999999.9999',
-            'restday' => 'nullable|array'
-        ]);
+        $this->user_validate($request);
 
         $user = User::find($request->id);
         $user->name = $request->name;
@@ -157,9 +178,7 @@ class ManageUserController extends Controller
         $user->email = $request->email;
         $user->address = $request->address;
         $user->username = $request->username;
-        if (!empty($request->password)) {
-            $user->password = Hash::make($request->password);
-        }
+        $user->status = $request->status ?? 0;
 
         if ($request->hasFile('file')) {
             $file = $request->file('file');
@@ -170,16 +189,19 @@ class ManageUserController extends Controller
         }
 
         if ($user->save()) {
-            $user_schedule = UserSchedule::where('user_id', $user->id)->first();
-            $user_schedule->in_time = $request->in_time;
-            $user_schedule->out_time = $request->out_time;
-            $user_schedule->join_date = $request->join_date;
-            $user_schedule->resign_date = $request->resign_date;
-            $user_schedule->hours = calculateTotalHour($request->in_time, $request->out_time);
-            $user_schedule->restday = $request->restday;
-            $user_schedule->annual_leave = $request->annual_leave;
-            $user_schedule->emergency_leave = $request->emergency_leave;
-            $user_schedule->save();
+            UserSchedule::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'in_time'         => $request->in_time,
+                    'out_time'        => $request->out_time,
+                    'join_date'       => $request->join_date,
+                    'resign_date'     => $request->resign_date,
+                    'hours'           => calculateTotalHour($request->in_time, $request->out_time),
+                    'restday'         => $request->restday,
+                    'annual_leave'    => $request->annual_leave,
+                    'emergency_leave' => $request->emergency_leave
+                ]
+            );
 
             return redirect()->route('admin.user')->withSuccess('User updated successfully.');
         }

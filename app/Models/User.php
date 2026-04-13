@@ -12,9 +12,16 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $guarded = ['id'];
+
     public function user_schedule()
     {
         return $this->belongsTo(UserSchedule::class, 'id', 'user_id');
+    }
+
+    public function boards()
+    {
+        return $this->belongsToMany(Board::class)->withTimestamps();
     }
 
     /**
@@ -22,11 +29,11 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    // protected $fillable = [
+    //     'name',
+    //     'email',
+    //     'password',
+    // ];
 
     /**
      * The attributes that should be hidden for serialization.

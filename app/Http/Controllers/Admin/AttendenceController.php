@@ -39,9 +39,11 @@ class AttendenceController extends Controller
                 $data["public_holidays"] = $query->clone()->where('status', 2)->count();
                 $data["leave_days"] = $query->clone()->where('status', 3)->count();
                 $data["late_in"] = $query->clone()->where('in_status', 'LIKE', '%Late In%')->count();
+                $data["points"] = $query->clone()->sum('points');
 
-                $data["total_hours"] = $query->clone()->whereIn('status', [0, 1, 5])->count();
-                $data["total_hours"] = $data["total_hours"] * @$data["user"]->user_schedule->hours;
+                $data["total_hours"] = $query->clone()->sum('total_hours');
+                // $data["total_hours"] = $query->clone()->whereIn('status', [0, 1, 5])->count();
+                // $data["total_hours"] = $data["total_hours"] * ($data["user"]->user_schedule->hours ?? 0);
 
                 $data["query"] = $query->with('user')->latest()->get();
             }

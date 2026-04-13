@@ -9,8 +9,7 @@
                         <h4 class="fw-bold">{{ $page_title }}</h4>
                     </div>
                     <div class="col-4 text-end">
-                        <a href="{{ route('admin.public_holiday.create') }}" class="btn btn-primary">Add New Public
-                            Hoilday</a>
+                        <a href="{{ route('admin.board.create') }}" class="btn btn-primary">Add New Board</a>
                     </div>
                 </div>
             </div>
@@ -38,7 +37,7 @@
                 pageLength: Number('{{ general()->page_length }}'),
                 scrollX: true,
                 ajax: {
-                    url: "{{ route('admin.public_holiday') }}",
+                    url: "{{ route('admin.board') }}",
                     type: "get",
                     data: function(d) {},
                 },
@@ -52,8 +51,14 @@
                         data: 'name'
                     },
                     {
-                        title: 'Date',
-                        data: 'date'
+                        title: 'Members',
+                        data: 'members',
+                        searchable: false
+                    },
+                    {
+                        title: 'Created At',
+                        data: 'date',
+                        searchable: false
                     },
                     {
                         title: 'Actions',

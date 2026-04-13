@@ -14,9 +14,22 @@ class PublicHolidayController extends Controller
         $data['page_title'] = "Public Holidays";
 
         if ($request->ajax()) {
-            $query = PublicHoilday::Query();
-            $query = $query->latest()->get();
-            return DataTables::of($query)->addIndexColumn()->make(true);
+            $query = PublicHoilday::orderBy('date', 'DESC');
+
+            return DataTables::of($query)
+                ->addColumn('date', function ($row) {
+                    return showDate($row->date);
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '';
+                    $btn .= '<a href="' . route('admin.public_holiday.edit', $row->id) . '" class="btn btn-sm btn-warning">Edit</a>';
+                    $btn .= '<a href="' . route('admin.public_holiday.delete', $row->id) . '" class="btn btn-sm btn-danger" onclick="return checkDelete()">Delete</a>';
+
+                    return "<div class='btn-group' role='group'>$btn</div>";
+                })
+                ->rawColumns(['action'])
+                ->addIndexColumn()
+                ->make(true);
         }
 
         return view('admin.public_holiday.index', $data);
@@ -43,9 +56,9 @@ class PublicHolidayController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:150',
-            'date' => 'required|date',
+            'date' => 'required|date|after_or_equal:today',
         ]);
 
         $public_holiday = new PublicHoilday();
@@ -61,7 +74,7 @@ class PublicHolidayController extends Controller
 
     public function update(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:150',
             'date' => 'required|date',
         ]);

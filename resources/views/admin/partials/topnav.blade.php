@@ -29,14 +29,25 @@
                                 <div class="d-flex">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar avatar-online">
-                                            <img src="../../assets/img/avatars/14.png" alt class="h-auto rounded-circle" />
+                                            <img src="../../assets/img/avatars/14.png" alt
+                                                class="h-auto rounded-circle" />
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <span class="fw-semibold d-block">{{ auth()->guard('admin')->user()->name }}</span>
+                                        <span
+                                            class="fw-semibold d-block">{{ auth()->guard('admin')->user()->name }}</span>
                                         <small class="text-muted">{{ auth()->guard('admin')->user()->email }}</small>
                                     </div>
                                 </div>
+                            </a>
+                        </li>
+                        <li>
+                            <div class="dropdown-divider"></div>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('admin.general_setting') }}">
+                                <i class="ti ti-settings me-2 ti-sm"></i>
+                                <span class="align-middle">Setting</span>
                             </a>
                         </li>
                         <li>
