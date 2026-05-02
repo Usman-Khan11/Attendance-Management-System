@@ -262,9 +262,9 @@ class UserController extends Controller
                 'in_status'   => $in_status,
                 'status'      => 1,
                 'points'      => $points,
-                'in_ip'       => $ip_info['ip'],
-                'in_lat'      => $ip_info['latitude'],
-                'in_lng'      => $ip_info['longitude'],
+                'in_ip'       => $ip_info['ip'] ?? null,
+                'in_lat'      => $ip_info['latitude'] ?? null,
+                'in_lng'      => $ip_info['longitude'] ?? null,
                 'total_hours' => $total_hours
             ]);
 
@@ -316,9 +316,9 @@ class UserController extends Controller
             $attendance->out_time     = now();
             $attendance->out_status   = $out_status;
             $attendance->hours        = calculateTotalHour($attendance->in_time, now());
-            $attendance->out_ip       = $ip_info['ip'];
-            $attendance->out_lat      = $ip_info['latitude'];
-            $attendance->out_lng      = $ip_info['longitude'];
+            $attendance->out_ip       = $ip_info['ip'] ?? null;
+            $attendance->out_lat      = $ip_info['latitude'] ?? null;
+            $attendance->out_lng      = $ip_info['longitude'] ?? null;
             $attendance->is_completed = 1;
             $attendance->save();
 

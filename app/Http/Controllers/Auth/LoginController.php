@@ -59,7 +59,7 @@ class LoginController extends Controller
             }
 
             $ipInfo = getIpInfo();
-            if ($ipInfo['ip'] && env('APP_ENV') == 'production') {
+            if (!empty($ipInfo) && env('APP_ENV') == 'production') {
                 UserLogin::create([
                     'user_id'      => $user->id,
                     'user_ip'      => $ipInfo['ip'],

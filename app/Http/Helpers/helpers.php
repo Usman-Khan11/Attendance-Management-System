@@ -155,29 +155,33 @@ function getIpInfo($ip = null)
         $ip = getUserIP();
     }
 
-    $agent = new Agent();
+    try {
+        $agent = new Agent();
 
-    $response = Http::get("https://api.ipbase.com/v1/json/{$ip}");
-    $data = $response->object();
+        $response = Http::get("https://api.ipbase.com/v1/json/{$ip}");
+        $data = $response->object();
 
-    return [
-        'ip'           => $ip,
-        'city'         => $data->city ?? null,
-        'state'        => $data->region_name ?? null,
-        'browser'      => $agent->browser(),
-        'os'           => $agent->platform(),
-        'longitude'    => $data->longitude ?? null,
-        'latitude'     => $data->latitude ?? null,
-        'country'      => $data->country_name ?? null,
-        'country_code' => $data->country_code ?? null,
-        'timezone'     => $data->time_zone ?? null,
-        'zipcode'      => $data->zip_code ?? null,
-        'location'     => implode(' - ', array_filter([
-            $data->city ?? null,
-            $data->region_name ?? null,
-            $data->zip_code ?? null
-        ]))
-    ];
+        return [
+            'ip'           => $ip,
+            'city'         => $data->city ?? null,
+            'state'        => $data->region_name ?? null,
+            'browser'      => $agent->browser(),
+            'os'           => $agent->platform(),
+            'longitude'    => $data->longitude ?? null,
+            'latitude'     => $data->latitude ?? null,
+            'country'      => $data->country_name ?? null,
+            'country_code' => $data->country_code ?? null,
+            'timezone'     => $data->time_zone ?? null,
+            'zipcode'      => $data->zip_code ?? null,
+            'location'     => implode(' - ', array_filter([
+                $data->city ?? null,
+                $data->region_name ?? null,
+                $data->zip_code ?? null
+            ]))
+        ];
+    } catch (\Exception $e) {
+        return null;
+    }
 }
 
 function formatNumber($number)
